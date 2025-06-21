@@ -15,6 +15,7 @@ class Sim_obj {
 private:
     std::string name;
 
+
 public:
     explicit Sim_obj(std::string n) : name(std::move(n)) {}
 

@@ -1,3 +1,6 @@
+#include <iostream>
+
+#include "Controller.h"
 #include "stdio.h"
 
 
@@ -7,7 +10,7 @@ int main(int argc, char *argv[]) {
     std::cout.precision(2);
     std::cout << std::fixed;
 
-    Controller controller();
+    Controller controller;
     controller.run(argc, argv);
     return 0;
 }

@@ -5,17 +5,24 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#include <iostream>
 
 
 class Controller {
 public:
-    Controller();
-    ~Controller();
+    Controller () = default;
+    ~Controller() = default;
 
     // creates View object, runs the program by accepting user commands, then destroys View object
-    void run();
+    void run(int argc, char* argv[]);
 
-private:
-    View* view_ptr;
+    void loadWarehouses(const std::string &filename);
+
+    void loadTruckSchedule(const std::string &filename);
+
+    void commandLoop();
+
+
+
 };
 #endif //CONTROLLER_H
