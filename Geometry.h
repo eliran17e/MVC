@@ -16,6 +16,13 @@ typedef struct Point {
     Point();
     void print() const;
     bool operator==(const Point& rhs);
+    Point& operator=(const Point& rhs) {
+        if (this != &rhs) {
+            x = rhs.x;
+            y = rhs.y;
+        }
+        return *this;
+    }
 } Point;
 struct Polar_vector;
 typedef struct Cartesian_vector {

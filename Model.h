@@ -28,6 +28,9 @@ private:
     Model() {
         view = std::make_shared<View>();
         time = 0;
+        auto frankfurt = std::make_shared<Warehouse>("Frankfurt", std::make_shared<Point>(40.0, 10.0), 100000);
+
+        addWarehouse(frankfurt);
     }
 
 public:
@@ -45,9 +48,9 @@ public:
 
     double parseTime(const std::string &timeStr);
 
-std::shared_ptr<Vehicle> findVehicleByName(const string & name);
+    std::shared_ptr<Vehicle> findVehicleByName(const string & name);
 
-std::shared_ptr<Warehouse> findWarehouseByName(const string & string);
+    std::shared_ptr<Warehouse> findWarehouseByName(const string & string);
 
     Model(Model&&) = delete;
     Model& operator=(Model&&) = delete;

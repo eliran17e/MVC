@@ -15,6 +15,8 @@ private:
     set<std::string> visitedWarehouses;
     void startPatrol();
 
+
+
 public:
     State_trooper(const std::string& name, std::shared_ptr<Point> location, const std::string& state = "stopped")
         : Vehicle(name, std::move(location), state) {}
@@ -22,9 +24,9 @@ public:
     void update() override;
     void broadcast_current_state() override;
 
-    void course(double angle,double speed = 90.0) override;
+    void course(double angle,double speed ) override;
 
-    void position(double x, double y,double speed = 90.0) override;
+    void position(double x, double y,double speed) override;
 
     void goToDestination(const std::string& warehouseName);
 };

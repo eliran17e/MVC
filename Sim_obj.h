@@ -10,7 +10,7 @@
 #include <utility>
 #include "Geometry.h"
 
-
+using std::shared_ptr;
 class Sim_obj {
 private:
     std::string name;
@@ -18,19 +18,16 @@ private:
 
 public:
     explicit Sim_obj(std::string n) : name(std::move(n)) {}
-
     virtual ~Sim_obj() = default;
 
 
     // Pure virtual methods for the derived classes
     virtual const shared_ptr<Point> &get_location() const = 0;
-
     virtual void update() = 0;
-
     virtual void broadcast_current_state() = 0;
 
     // Getter
-    const std::string &getName() const {
+    virtual const std::string& getName() const {
         return name;
     }
 

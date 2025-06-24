@@ -17,8 +17,9 @@ public:
     ~Warehouse() override = default;
     const shared_ptr<Point> &get_location() const override;
     void update() override;
-    void update_boxes(int quantity);
+    bool update_boxes(int quantity);
     void broadcast_current_state() override;
+    int getInventory() const;
 
 
 

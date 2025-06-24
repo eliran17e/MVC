@@ -18,6 +18,7 @@ protected:
     double angle;                       // in degrees (0-360)
     double speed;                       // in km/h
     shared_ptr<Point> destination;      // optional, only when moving to a location
+    int mode; // 0 for position, 1 for in course , 2 destination/warehouse mode for trucks and state troopers
 
 public:
     Vehicle();
@@ -53,6 +54,8 @@ public:
     static double computeDistance(double x1, double y1, double x2, double y2);
 
     void setSpeed(double x);
+    double getSpeed() const { return speed; }
+    double getAngle() const { return angle; }
 
 };
 

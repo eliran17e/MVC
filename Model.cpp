@@ -9,6 +9,7 @@ void Model::addSimObj(const std::shared_ptr<Sim_obj>& obj) {
 void Model::addVehicle(const std::shared_ptr<Vehicle>& v) {
     vehicles.push_back(v);
     sim_objects.push_back(v);
+
 }
 
 void Model::addWarehouse(const std::shared_ptr<Warehouse>& w) {
@@ -48,33 +49,41 @@ double Model::getTime() const {
 
 
 void Model::insert_objects() {
-    for(auto const& obj : vehicles) {
-        double min_x = view->getX();
-        double max_x = min_x + view->getScale()*(view->getSize() - 1);
-        double min_y = view->getY();
-        double max_y = min_y + view->getScale()*(view->getSize() - 1);
-        if(static_cast<int>(obj->get_location()->x) < min_x || static_cast<int>(obj->get_location()->x) > max_x ||
-                static_cast<int>(obj->get_location()->y) < min_y || static_cast<int>(obj->get_location()->y) > max_y) {
-            continue;
-                }
 
-        std::string tmp = obj->getName();
-        view->insert_obj(static_cast<int>(obj->get_location()->x), static_cast<int>(obj->get_location()->y), tmp.substr(0, 2));
+
+    for (auto const& obj : vehicles) {
+        auto loc = obj->get_location();
+        double min_x = view->getX();
+        double min_y = view->getY();
+        double scale = view->getScale();
+        int size = view->getSize();
+
+        int col = static_cast<int>(loc->x);
+        int row = static_cast<int>(loc->y);
+
+        if (col < 0 || col/scale >= size || row < 0 || row/scale >= size)
+            continue;  // Out of view bounds
+
+        view->insert_obj(row, col, obj->getName().substr(0, 2));
     }
-    for(auto const& obj : warehouses) {
-        double min_x = view->getX();
-        double max_x = min_x + view->getScale()*(view->getSize() - 1);
-        double min_y = view->getY();
-        double max_y = min_y + view->getScale()*(view->getSize() - 1);
-        if(obj->get_location()->x < min_x || obj->get_location()->x > max_x ||
-           obj->get_location()->y < min_y || obj->get_location()->y > max_y) {
-            continue;
-           }
 
-        std::string tmp = obj->getName();
-        view->insert_obj(static_cast<int>(obj->get_location()->x), static_cast<int>(obj->get_location()->y), tmp.substr(0, 2));
+    for (auto const& obj : warehouses) {
+        auto loc = obj->get_location();
+        double min_x = view->getX();
+        double min_y = view->getY();
+        double scale = view->getScale();
+        int size = view->getSize();
+
+        int col = static_cast<int>(loc->x);
+        int row = static_cast<int>(loc->y);
+
+        if (col < 0 || col/scale >= size || row < 0 || row/scale >= size)
+            continue;
+
+        view->insert_obj(row, col, obj->getName().substr(0, 2));
     }
 }
+
 
 const shared_ptr<View> & Model::getView() const {
     return view;

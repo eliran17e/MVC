@@ -10,7 +10,7 @@
 
 class Controller {
 public:
-    Controller () = default;
+    Controller ();
     ~Controller() = default;
 
     // creates View object, runs the program by accepting user commands, then destroys View object

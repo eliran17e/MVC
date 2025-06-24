@@ -8,8 +8,8 @@ View::View() {
     size = 25;
     scale = 2;
     map.resize(size, std::vector<std::string>(size, "."));
-    x = 0;
-    y = 0;
+    x = -10;
+    y = -10;
 }
 
 View::View(const View &v) {
@@ -110,13 +110,15 @@ void View::show() {
 }
 
 void View::insert_obj(double i, double j, std::string name) {
-    i = i / scale;
-    j = j / scale;
-    i += (x / scale) * (-1);
-    j += (y / scale) * (-1);
-    map[(int)i][(int)j] = std::move(name);
-}
+    // Convert world coordinates to view grid indices
+    int row = static_cast<int>((j - y) / scale);
+    int col = static_cast<int>((i - x) / scale);
 
+    // Check bounds before inserting into the map
+    if (row >= 0 && row < size && col >= 0 && col < size) {
+        map[row][col] = std::move(name);
+    }
+}
 void View::clear() {
     map.clear();
     map.resize(size, std::vector<std::string>(size, "."));

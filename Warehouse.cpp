@@ -16,13 +16,18 @@ void Warehouse::update() {
 
 void Warehouse::broadcast_current_state() {
     // Broadcast the current state of the warehouse
-    cout << "Warehouse " << getName() << " at location (" << _location->x << ", " << _location->y << ") with inventory: " << _inventory << endl;
+    cout << "Warehouse " << getName() << " at position (" << _location->x << ", " << _location->y << ") with inventory: " << _inventory << endl;
 }
 
-void Warehouse::update_boxes(int quantity) {
+bool Warehouse::update_boxes(int quantity) {
     if (_inventory + quantity < 0) {
         cout << "Cannot remove more boxes than available in inventory." << endl;
+        return false;
     } else {
         _quantity += quantity;
+        return true;
     }
+}
+int Warehouse::getInventory() const {
+    return _inventory;
 }

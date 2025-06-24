@@ -5,28 +5,30 @@
 #include "State_trooper.h"
 
 
-void State_trooper::course(double angle,double speed) {
+void State_trooper::course(double angle,double speed = 90.0) {
     this->angle = angle;
     this->speed = speed;
     this->destination = nullptr;
     en_route = true;
     arrived = false;
-    setState("Patrolling on course " + std::to_string(angle));
+    mode = 1; // <-- course mode
+    setState("Moving to " + std::to_string(angle));
 }
 
-void State_trooper::position(double x, double y,double speed) {
+void State_trooper::position(double x, double y,double speed=90.0) {
     destination = std::make_shared<Point>(x, y);
     angle = to_degrees(std::atan2(x - _location->x, y - _location->y));
     this->speed = speed;
     en_route = true;
     arrived = false;
+    mode = 0; // <-- position mode
     setState("Moving to position");
 }
 
 
 void State_trooper::goToDestination(const std::string& warehouseName) {
     const auto& warehouses = Model::getInstance().getWarehouses();
-
+    mode = 2; // <-- manual destination mode
     for (const auto& wh : warehouses) {
         if (wh->getName() == warehouseName) {
             destination = wh->get_location();
@@ -37,7 +39,7 @@ void State_trooper::goToDestination(const std::string& warehouseName) {
             arrived = false;
             currentDestinationName = warehouseName;
             visitedWarehouses.insert(warehouseName);
-            setState("Heading to " + warehouseName);
+            setState("Moving to " + warehouseName);
             return;
         }
     }
@@ -47,26 +49,44 @@ void State_trooper::goToDestination(const std::string& warehouseName) {
 
 
 void State_trooper::update() {
-    if (!en_route || !destination) return;
+    if (!en_route || speed == 0.0) return;
 
     double radians = to_radians(angle);
-    double dx = speed * std::sin(radians);
-    double dy = speed * std::cos(radians);
-
+    double dy = (speed / 100.0) * std::cos(radians);
+    double dx = (speed / 100.0) * std::sin(radians);
     _location->x += dx;
     _location->y += dy;
 
-    double remaining = Vehicle::computeDistance(_location->x, _location->y,
-                                                destination->x, destination->y);
-
-    if (remaining < 0.1 && !arrived) {
-        _location = destination;
-        setState("Arrived at " + currentDestinationName);
-        en_route = false;
-        arrived = true;
-
-        startPatrol();
-
+    if (mode == 0 && destination) {
+        // Move to position, then stop
+        double remaining = Vehicle::computeDistance(_location->x, _location->y,
+                                                    destination->x, destination->y);
+        if (remaining < 1 && !arrived) {
+            _location->x = destination->x;
+            _location->y = destination->y;
+            setState("Stopped");
+            speed = 0.0;
+            en_route = false;
+            arrived = true;
+        } else {
+            setState("Moving to position");
+        }
+    } else if (mode == 1) {
+        // Course mode: move forever
+        setState("Moving to " + std::to_string(angle));
+    } else if (mode == 2 && destination) {
+        // Patrol/warehouse mode
+        double remaining = Vehicle::computeDistance(_location->x, _location->y,
+                                                    destination->x, destination->y);
+        if (remaining < 1 && !arrived) {
+            _location->x = destination->x;
+            _location->y = destination->y;
+            setState("Arrived at " + currentDestinationName);
+            en_route = false;
+            arrived = true;
+            // Start patrol to next warehouse (unless all visited)
+            startPatrol();
+        }
     }
 }
 
@@ -110,7 +130,7 @@ void State_trooper::startPatrol() {
         arrived = false;
         currentDestinationName = nextName;
         visitedWarehouses.insert(nextName);
-        setState("Patrolling to " + nextName);
+        setState("Heading to " + nextName);
     } else {
         // All warehouses visited
         destination = nullptr;

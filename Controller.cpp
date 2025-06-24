@@ -7,7 +7,9 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
-
+Controller::Controller() {
+    Model::getInstance();
+}
 void Controller::run(int argc, char* argv[]) {
     std::string warehouseFile;
     std::vector<std::string> truckFiles;
@@ -93,73 +95,81 @@ void Controller::loadTruckSchedule(const std::string& filename) {
         return;
     }
 
-    std::istringstream iss(line);
-    std::string initialWarehouse, initialDepartureTime;
-    std::getline(iss, initialWarehouse, ',');
-    std::getline(iss, initialDepartureTime);
-
     auto& model = Model::getInstance();
     auto whs = model.getWarehouses();
-    auto it = std::find_if(whs.begin(), whs.end(), [&](const std::shared_ptr<Warehouse>& wh) {
-        return wh->getName() == initialWarehouse;
-    });
 
-    if (it == whs.end()) {
-        std::cerr << "ERROR: Warehouse " << initialWarehouse << " not found for truck " << truckName << "\n";
+    // Parse the initial line for start location and departure
+    std::istringstream iss(line);
+    std::string prevWarehouseName, prevDepartureTimeStr;
+    std::getline(iss, prevWarehouseName, ',');
+    std::getline(iss, prevDepartureTimeStr);
+    auto prevWarehouseIt = std::find_if(whs.begin(), whs.end(), [&](const std::shared_ptr<Warehouse>& wh) {
+        return wh->getName() == prevWarehouseName;
+    });
+    if (prevWarehouseIt == whs.end()) {
+        std::cerr << "ERROR: Warehouse " << prevWarehouseName << " not found for truck " << truckName << "\n";
         return;
     }
+    std::shared_ptr<Point> prevLocation = (*prevWarehouseIt)->get_location();
+    double prevDepartureTime = model.parseTime(prevDepartureTimeStr);
 
-    auto truck = std::make_shared<Truck>(truckName, (*it)->get_location(), "stopped", 0);
-    double initialDeparture = model.parseTime(initialDepartureTime);
-
-    std::shared_ptr<Point> currentLocation = (*it)->get_location();  // Start at initial warehouse
-    std::string currentWarehouse = initialWarehouse;
-
-    // Add initial "dummy" leg to initialize time
-    truck->addDeliveryLeg(currentWarehouse, currentLocation, currentLocation, initialDeparture, 0, initialDeparture);
-
+    auto truck = std::make_shared<Truck>(
+        truckName,
+        std::make_shared<Point>(*prevLocation),
+        "stopped",
+        0
+    );
     int totalCrates = 0;
 
+    // Now parse each delivery leg
     while (std::getline(file, line)) {
         std::istringstream lineStream(line);
-        std::string warehouse, arrivalStr, boxesStr, departureStr;
-        std::getline(lineStream, warehouse, ',');
+        std::string warehouseName, arrivalStr, cratesStr, departureStr;
+        std::getline(lineStream, warehouseName, ',');
         std::getline(lineStream, arrivalStr, ',');
-        std::getline(lineStream, boxesStr, ',');
+        std::getline(lineStream, cratesStr, ',');
         std::getline(lineStream, departureStr);
 
-        auto w_it = std::find_if(whs.begin(), whs.end(), [&](const std::shared_ptr<Warehouse>& wh) {
-            return wh->getName() == warehouse;
+        auto warehouseIt = std::find_if(whs.begin(), whs.end(), [&](const std::shared_ptr<Warehouse>& wh) {
+            return wh->getName() == warehouseName;
         });
-
-        if (w_it == whs.end()) {
-            std::cerr << "ERROR: Warehouse " << warehouse << " not found in schedule for truck " << truckName << "\n";
+        if (warehouseIt == whs.end()) {
+            std::cerr << "ERROR: Warehouse " << warehouseName << " not found in schedule for truck " << truckName << "\n";
             continue;
         }
-
-        double arrival = model.parseTime(arrivalStr);
-        double departure = model.parseTime(departureStr);
-        int crates = std::stoi(boxesStr);
+        std::shared_ptr<Point> warehouseLoc = (*warehouseIt)->get_location();
+        double arrivalTime = model.parseTime(arrivalStr);
+        double departureTime = model.parseTime(departureStr);
+        int crates = std::stoi(cratesStr);
 
         totalCrates += crates;
 
-        // Add leg from previous warehouse/location to current one
+        // Build the leg from prevWarehouse to this warehouse
         truck->addDeliveryLeg(
-            warehouse,
-            currentLocation,                // source location
-            (*w_it)->get_location(),        // destination location
-            arrival,
+            warehouseName,        // destination name
+            prevLocation,         // sourceLocation
+            warehouseLoc,         // destinationLocation
+            prevDepartureTime,    // depart (from previous warehouse)
             crates,
-            departure
+            arrivalTime           // arrive (to current warehouse)
         );
 
         // Update for next leg
-        currentLocation = (*w_it)->get_location();
-        currentWarehouse = warehouse;
+        prevLocation = warehouseLoc;
+        prevDepartureTime = departureTime;
     }
 
     truck->setBoxes(totalCrates);
     model.addVehicle(truck);
+
+
+
+    std::queue<DeliveryLeg> tmp = truck->getDeliveryQueue();
+    while (!tmp.empty()) {
+        const auto& leg = tmp.front();
+
+        tmp.pop();
+    }
 }
 
 
@@ -215,16 +225,19 @@ void Controller::commandLoop() {
                 if (!wh) {
                     std::cerr << "ERROR: Warehouse '" << warehouseName << "' not found.\n";
                 } else {
-                    auto trooper = std::make_shared<State_trooper>(objName, wh->get_location());
+                    auto trooper = std::make_shared<State_trooper>(objName, std::make_shared<Point>(wh->get_location()->x, wh->get_location()->y));
                     Model::getInstance().addVehicle(trooper);
                 }
             } else if (type == "Chopper") {
+                std::string coord;
+                std::getline(iss, coord); // grab the rest of the line (e.g. "(14.00, 14.00)")
+
                 double x, y;
-                if (iss >> x >> y) {
+                if (sscanf(coord.c_str(), " (%lf , %lf)", &x, &y) == 2) {
                     auto chopper = std::make_shared<Chopper>(objName, std::make_shared<Point>(x, y));
                     Model::getInstance().addVehicle(chopper);
                 } else {
-                    std::cerr << "ERROR: Invalid coordinates for Chopper creation.\n";
+                    std::cerr << "ERROR: Invalid coordinates format for Chopper. Use (x, y)\n";
                 }
             } else {
                 std::cerr << "ERROR: Invalid type. Only 'State_trooper' and 'Chopper' are supported.\n";
