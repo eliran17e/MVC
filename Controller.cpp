@@ -175,7 +175,7 @@ void Controller::loadTruckSchedule(const std::string& filename) {
 
 void Controller::commandLoop() {
     std::string line;
-    std::cout << "> ";
+    std::cout << "Time " + std::to_string(static_cast<int>(Model::getInstance().getTime())) + ": Enter command: ";
 
     while (std::getline(std::cin, line)) {
         std::istringstream iss(line);
@@ -247,7 +247,7 @@ void Controller::commandLoop() {
             auto vehicle = Model::getInstance().findVehicleByName(objName);
             if (!vehicle) {
                 std::cerr << "ERROR: Unknown object '" << objName << "'\n";
-                std::cout << "> ";
+                std::cout << "Time " + std::to_string(static_cast<int>(Model::getInstance().getTime())) + ": Enter command: ";
                 continue;
             }
 
@@ -313,6 +313,6 @@ void Controller::commandLoop() {
             }
         }
 
-        std::cout << "> ";
+        std::cout << "Time " + std::to_string(static_cast<int>(Model::getInstance().getTime())) + ": Enter command: ";
     }
 }

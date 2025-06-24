@@ -38,8 +38,8 @@ View &View::operator=(const View &v) {
 void View::default_size() {
     size = 25;
     scale = 2;
-    x = 0;
-    y = 0;
+    x = -10;
+    y = -10;
 }
 
 void View::new_size(int s) {
