@@ -15,6 +15,7 @@ void Vehicle::stop() {
     this->angle = 0.0;
     this->speed = 0.0;
     this->destination = nullptr;
+    this->en_route = false;
     setState("Stopped");
 }
 
@@ -30,4 +31,16 @@ void Vehicle::setSpeed(double x) {
         x = 0;
     }
     this->speed = x;
+}
+void Vehicle::position(double x, double y, double speed) {
+    pending_position = true;
+    pending_pos_x = x;
+    pending_pos_y = y;
+    pending_pos_speed = speed;
+}
+
+void Vehicle::course(double angle, double speed) {
+    pending_course = true;
+    pending_course_angle = angle;
+    pending_course_speed = speed;
 }

@@ -53,8 +53,6 @@ void Model::insert_objects() {
 
     for (auto const& obj : vehicles) {
         auto loc = obj->get_location();
-        double min_x = view->getX();
-        double min_y = view->getY();
         double scale = view->getScale();
         int size = view->getSize();
 
@@ -69,11 +67,8 @@ void Model::insert_objects() {
 
     for (auto const& obj : warehouses) {
         auto loc = obj->get_location();
-        double min_x = view->getX();
-        double min_y = view->getY();
         double scale = view->getScale();
         int size = view->getSize();
-
         int col = static_cast<int>(loc->x);
         int row = static_cast<int>(loc->y);
 

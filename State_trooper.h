@@ -9,11 +9,12 @@
 class State_trooper : public Vehicle {
 
 private:
-    bool en_route = false;
     bool arrived = false;
     std::string currentDestinationName;
     set<std::string> visitedWarehouses;
     void startPatrol();
+    bool pending_goto = false;
+    std::string pending_goto_name;
 
 
 
@@ -23,10 +24,6 @@ public:
 
     void update() override;
     void broadcast_current_state() override;
-
-    void course(double angle,double speed ) override;
-
-    void position(double x, double y,double speed) override;
 
     void goToDestination(const std::string& warehouseName);
 };

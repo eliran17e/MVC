@@ -117,7 +117,8 @@ void Controller::loadTruckSchedule(const std::string& filename) {
         truckName,
         std::make_shared<Point>(*prevLocation),
         "stopped",
-        0
+        0,
+        prevWarehouseName
     );
     int totalCrates = 0;
 
@@ -166,8 +167,6 @@ void Controller::loadTruckSchedule(const std::string& filename) {
 
     std::queue<DeliveryLeg> tmp = truck->getDeliveryQueue();
     while (!tmp.empty()) {
-        const auto& leg = tmp.front();
-
         tmp.pop();
     }
 }
@@ -307,7 +306,7 @@ void Controller::commandLoop() {
                     std::cerr << "ERROR: Only Chopper supports 'attack' command.\n";
                 }
             } else if (action == "stop") {
-                vehicle->stop();
+                vehicle->setState("Stopped");
             } else {
                 std::cerr << "ERROR: Unknown command '" << action << "' for object '" << objName << "'\n";
             }

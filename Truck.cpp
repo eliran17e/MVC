@@ -8,22 +8,61 @@
 
 
 void Truck::update() {
+    if (pending_position) {
+        // Clear any routes, set mode, state, etc.
+        while (!deliveryRoute.empty()) deliveryRoute.pop();
+
+        this->destination = std::make_shared<Point>(pending_pos_x, pending_pos_y);
+        double dx = pending_pos_x - _location->x;
+        double dy = pending_pos_y - _location->y;
+        this->angle = to_degrees(std::atan2(dx, dy));
+        this->speed = pending_pos_speed / 100.0;
+        this->mode = 0;
+        this->en_route = true;
+        this->arrived = false;
+        setState("Moving to manual destination");
+
+        pending_position = false;
+        // Do NOT return here: continue to rest of logic!
+    }
+
+    if (pending_course) {
+        while (!deliveryRoute.empty()) deliveryRoute.pop();
+        this->angle = pending_course_angle;
+        this->speed = pending_course_speed / 100.0;
+        this->destination = nullptr;
+        this->mode = 1;
+        this->en_route = true;
+        this->arrived = false;
+        setState("Moving on course");
+
+        pending_course = false;
+        // Do NOT return here: continue to rest of logic!
+    }
+
     double currentTime = Model::getInstance().getTime();
+    if (firstRoute && !deliveryRoute.empty()) {
+        // If this is the first route, set the first leg
+        Model::getInstance().findWarehouseByName(startingWarehouseName)->update_boxes(-num_boxes);
+        firstRoute = false;
+        Model::getInstance().findWarehouseByName(startingWarehouseName)->update();
+
+    }
 
     // MODE 0: Move to position, stop at destination
     if (mode == 0 && en_route && destination) {
         double radians = to_radians(angle);
-        double dy = (speed / 100.0) * std::cos(radians);
-        double dx = (speed / 100.0) * std::sin(radians);
+        double dy = (speed ) * std::cos(radians);
+        double dx = (speed ) * std::sin(radians);
 
         _location->x += dx;
         _location->y += dy;
 
         double remaining = Vehicle::computeDistance(_location->x, _location->y, destination->x, destination->y);
-        if (remaining < speed/100 && !arrived) {
+        if (remaining < speed && !arrived) {
             _location->x = destination->x;
             _location->y = destination->y;
-            setState("Stopped at manual position");
+            setState("Stopped");
             speed = 0.0;
             en_route = false;
             arrived = true;
@@ -31,11 +70,11 @@ void Truck::update() {
         return; // Don't continue to delivery logic
     }
 
-    // MODE 1: Move at angle forever, never stop
+
     if (mode == 1 && en_route) {
         double radians = to_radians(angle);
-        double dy = (speed / 100.0) * std::cos(radians);
-        double dx = (speed / 100.0) * std::sin(radians);
+        double dy = (speed ) * std::cos(radians);
+        double dx = (speed ) * std::sin(radians);
 
         _location->x += dx;
         _location->y += dy;
@@ -100,6 +139,7 @@ void Truck::update() {
                 if (num_boxes < 0) num_boxes = 0;
                 unloaded = true;
                 Model::getInstance().findWarehouseByName(current_leg.destinationName)->update_boxes(current_leg.crates);
+                Model::getInstance().findWarehouseByName(current_leg.destinationName)->update();
             }
 
             setState("Parked at " + current_leg.destinationName);
@@ -117,7 +157,7 @@ void Truck::update() {
         unloaded = false;
 
         if (deliveryRoute.empty()) {
-            setState("All deliveries complete");
+            setState("Parked at " + current_leg.destinationName);
         }
     }
 }
@@ -163,54 +203,25 @@ void Truck::stop() {
 }
 
 
-
-void Truck::position(double x, double y, double speed) {
-    // Clear current route
-    while (!deliveryRoute.empty()) deliveryRoute.pop();
-
-    this->destination = std::make_shared<Point>(x, y);
-
-    // Calculate angle and distance
-    double dx = this->destination->x - _location->x;
-    double dy = this->destination->y - _location->y;
-
-    this->angle = to_degrees(std::atan2(dx, dy));
-
-    en_route = true;
-    arrived = false;
-    this->mode = 0; // position mode
-    setState("Moving to manual destination");
-    this->speed = speed;
-}
-
-void Truck::course(double angle, double speed) {
-    // Clear current route
-    while (!deliveryRoute.empty()) deliveryRoute.pop();
-
-    this->angle = angle;
-    this->speed = speed;
-    this->state = "Moving on course";
-    this->destination = nullptr; // course-based movement
-    en_route = true;
-    arrived = false;
-    mode = 1;
-    this->speed = speed;
-}
-
 void Truck::broadcast_current_state() {
     std::cout << "Truck " << getName()
               << " at (" << std::fixed << std::setprecision(2)
               << _location->x << ", " << _location->y << "), ";
 
-    if (destination && !arrived) {
+    if (mode == 2 && en_route && !arrived) {
         // Scheduled route or manual move in progress
         if (!current_leg.destinationName.empty()) {
             std::cout << "Heading to " << current_leg.destinationName << ",speed: " << speed * 100 << " km/h, ";
-        } else {
-            std::cout << "Heading to destination, ";
         }
-    } else {
-        std::cout << "Stopped, ";
+    }
+    else if (mode == 1 && en_route) {
+        std::cout << "Moving on course " << std::fmod(angle, 360.0) << " deg, speed: " << speed * 100 << " km/h, ";
+    }
+    else if (mode == 0 && en_route) {
+        std::cout << "Moving to position (" << destination->x << ", " << destination->y << "), speed: " << speed * 100 << " km/h, ";
+    }
+    else {
+        std::cout << this->state << ", ";
     }
 
     std::cout << "Crates: " << num_boxes << std::endl;

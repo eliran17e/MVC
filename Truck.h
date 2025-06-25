@@ -21,6 +21,7 @@ struct DeliveryLeg {
     double departureTime; // in hours (e.g. 11.25)
     int crates;
     double arrivalTime;  // in hours (e.g. 10.5)
+
 };
 
 
@@ -28,21 +29,24 @@ struct DeliveryLeg {
 
 class Truck : public Vehicle {
 private:
+    std::string startingWarehouseName; // Name of the starting warehouse
     int num_boxes;
     std::map<std::string, int> city_boxes;
     std::queue<DeliveryLeg> deliveryRoute;
-    bool en_route = false;
     bool arrived = false;
     DeliveryLeg current_leg;
     bool unloaded = false;
+    bool firstRoute; // true if this is the first leg of the route
 
 public:
-    Truck(std::string name, std::shared_ptr<Point> location, std::string state = "stopped", int boxes = 0)
-: Vehicle(std::move(name), location, std::move(state)),  // Don't move shared_ptr!
+    Truck(std::string name, std::shared_ptr<Point> location, std::string state = "stopped", int boxes = 0,std::string firstWareHouseName = "")
+: Vehicle(std::move(name), location, std::move(state)),
       num_boxes(boxes),
       current_leg()
     {
         this->mode = 2;
+        firstRoute = true;
+        this->startingWarehouseName = std::move(firstWareHouseName);
 
         if (num_boxes < 0) {
             num_boxes = 0;
@@ -56,10 +60,10 @@ public:
     void broadcast_current_state() override;
 
 
-    void course(double angle, double speed) override;
-
-
-    void position(double x, double y, double speed) override ;
+    // void course(double angle, double speed) override;
+    //
+    //
+    // void position(double x, double y, double speed) override ;
 
     void addDeliveryLeg(const std::string& destinationName,
                            std::shared_ptr<Point> sourceLocation,

@@ -23,8 +23,8 @@ class Chopper :   public Vehicle {
 
         void update() override;
 
-        void course(double angle, double speed) override;
-        void position(double x, double y, double speed) override;
+        // void course(double angle, double speed) override;
+        // void position(double x, double y, double speed) override;
         void broadcast_current_state() override ;
         bool attack(const std::string& truckName); // 🚨 now takes truck name
     };

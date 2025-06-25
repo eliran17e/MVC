@@ -9,10 +9,38 @@
 
 
 void Chopper::update() {
+
+    // Handle pending manual commands
+    if (pending_position) {
+        // Setup for position mode
+        this->destination = std::make_shared<Point>(pending_pos_x, pending_pos_y);
+        double dx = pending_pos_x - _location->x;
+        double dy = pending_pos_y - _location->y;
+        this->angle = to_degrees(std::atan2(dx, dy));
+        this->speed = pending_pos_speed;
+        this->mode = 0;
+        this->en_route = true;
+        setState("Moving to position");
+        pending_position = false;
+    }
+    if (pending_course) {
+        this->angle = pending_course_angle;
+        this->speed = pending_course_speed;
+        this->destination = nullptr;
+        this->mode = 1;
+        this->en_route = true;
+        setState("Moving to " + std::to_string(angle));
+        pending_course = false;
+    }
+    if (state == "Stopped") {
+        this->stop();
+        return;
+    }
     // Mode 0: Move to a position, then stop
     if (mode == 0) {
         if (!destination) {
             setState("Stopped");
+            en_route = false;
             speed = 0.0;
             return;
         }
@@ -27,6 +55,7 @@ void Chopper::update() {
             _location->x = destination->x;
             _location->y = destination->y;
             setState("Stopped");
+            en_route = false;
             speed = 0.0;
             destination = nullptr;
         } else {
@@ -36,7 +65,7 @@ void Chopper::update() {
     }
 
     // Mode 1: Move on a fixed course indefinitely
-    if (mode == 1) {
+    if (mode == 1 && en_route) {
         double radians = to_radians(angle);
         double dy = (speed / 100.0) * std::cos(radians);
         double dx = (speed / 100.0) * std::sin(radians);
@@ -52,21 +81,25 @@ void Chopper::update() {
         if (attack_success) {
             // Success: disable the truck
             const auto truck = dynamic_cast<Truck*>(Model::getInstance().findVehicleByName(targetTruckName).get());
+            truck->stop();
             truck->setState("Off road");
             truck->clearBoxes();       // zero boxes
             truck->setSpeed(0.0);      // stop the truck
 
+
             // Increase attack range by 1, max 20
             attack_range = std::min(attack_range + 0.01, 20.0);
-            std::cout << "Attack succeeded. New attack range: " << attack_range << " km\n";
+            std::cout << "Attack succeeded. New attack range: " << attack_range*100 << " km\n";
             setState("Stopped");
+            this->en_route = false;
             this->speed = 0.0;
             mode = 0;
 
         } else {
             attack_range = std::max(0.01, attack_range - 0.01);  // reduce attack range on failure
             this->speed = 0.0;
-            std::cerr << "Attack failed. Police nearby. Attack range reduced to: " << attack_range << " km\n";
+            this->en_route = false;
+            std::cout << "Attack failed. Attack range reduced to: " << attack_range*100 << " km\n";
             setState("Stopped");
         }
 
@@ -74,31 +107,21 @@ void Chopper::update() {
 }
 
 
-void Chopper::course(double angle, double speed) {
-    this->angle = angle;
-    this->speed = speed;
-    this->destination = nullptr;
-    mode=1;
-    setState("Moving to " + std::to_string(angle));
-}
-
-void Chopper::position(double x, double y, double speed) {
-    destination = std::make_shared<Point>(x, y);
-    angle = to_degrees(std::atan2(x - _location->x, y - _location->y));
-    this->speed = speed;
-    mode = 0; // position mode
-    setState("Moving to position");
-}
-
 void Chopper::broadcast_current_state() {
     std::cout << "Chopper " << getName()
               << " at (" << std::fixed << std::setprecision(2)
               << _location->x << ", " << _location->y << "), ";
 
-    if (destination && speed > 0.0)
-        std::cout << "Heading on couse " << angle << "deg, ";
+    if (mode == 1 && en_route) {
+        std::cout << "Moving on course " << std::fmod(angle, 360.0) << " deg, speed: " << speed  << " km/h. "<<std::endl;
+    }
+    else if (mode == 0 && en_route) {
+        std::cout << "Moving to position (" << destination->x << ", " << destination->y << "), speed: " << speed << " km/h. "<<std::endl;
+    }
+    else {
+        std::cout << this->state << "." << std::endl;
+    }
 
-    std::cout << "Speed: " << speed << " km/h" << std::endl;
 }
 
 bool Chopper::attack(const std::string& truckName) {
@@ -121,7 +144,7 @@ bool Chopper::attack(const std::string& truckName) {
 
     // Step 2: Check distance to truck
     double truckDistance = Vehicle::computeDistance(_location->x,_location->y, targetTruck->get_location()->x, targetTruck->get_location()->y);
-    if (truckDistance > attack_range) {
+    if (truckDistance >= attack_range) {
         attack_success = false;
         return false;
     }
@@ -130,7 +153,7 @@ bool Chopper::attack(const std::string& truckName) {
     bool policeNearby = false;
     for (const auto& v : vehicles) {
         if (dynamic_cast<State_trooper*>(v.get()) != nullptr) {
-            double dist = Vehicle::computeDistance(_location->x,_location->y, v->get_location()->x, v->get_location()->y);
+            double dist = Vehicle::computeDistance(targetTruck->get_location()->x,targetTruck->get_location()->y, v->get_location()->x, v->get_location()->y);
             if (dist <= 0.1) {
                 policeNearby = true;
                 break;

@@ -19,6 +19,11 @@ protected:
     double speed;                       // in km/h
     shared_ptr<Point> destination;      // optional, only when moving to a location
     int mode; // 0 for position, 1 for in course , 2 destination/warehouse mode for trucks and state troopers
+    bool en_route = false;
+    bool pending_position = false;
+    bool pending_course = false;
+    double pending_pos_x = 0, pending_pos_y = 0, pending_pos_speed = 0;
+    double pending_course_angle = 0, pending_course_speed = 0;
 
 public:
     Vehicle();
@@ -36,9 +41,9 @@ public:
 
     void broadcast_current_state() override = 0;
 
-    virtual void course(double angle, double speed) = 0;
+    virtual void course(double angle, double speed);
 
-    virtual void position(double x, double y, double speed) = 0;
+    virtual void position(double x, double y, double speed);
 
 
     const std::string &getState() const {
@@ -56,6 +61,7 @@ public:
     void setSpeed(double x);
     double getSpeed() const { return speed; }
     double getAngle() const { return angle; }
+    void setAngle(double angle) { this->angle = angle; }
 
 };
 
