@@ -23,6 +23,7 @@ void Chopper::update() {
         setState("Moving to position");
         pending_position = false;
     }
+
     if (pending_course) {
         this->angle = pending_course_angle;
         this->speed = pending_course_speed;
@@ -32,6 +33,7 @@ void Chopper::update() {
         setState("Moving to " + std::to_string(angle));
         pending_course = false;
     }
+
     if (state == "Stopped") {
         this->stop();
         return;
@@ -42,26 +44,26 @@ void Chopper::update() {
             setState("Stopped");
             en_route = false;
             speed = 0.0;
-            return;
         }
-        double radians = to_radians(angle);
-        double dy = (speed / 100.0) * std::cos(radians);
-        double dx = (speed / 100.0) * std::sin(radians);
-        _location->x += dx;
-        _location->y += dy;
+        else {
+            double radians = to_radians(angle);
+            double dy = (speed / 100.0) * std::cos(radians);
+            double dx = (speed / 100.0) * std::sin(radians);
+            _location->x += dx;
+            _location->y += dy;
 
-        double remaining = Vehicle::computeDistance(_location->x, _location->y, destination->x, destination->y);
-        if (remaining < speed/100.0 ) {
-            _location->x = destination->x;
-            _location->y = destination->y;
-            setState("Stopped");
-            en_route = false;
-            speed = 0.0;
-            destination = nullptr;
-        } else {
-            setState("Moving to (" + std::to_string(destination->x) + "," + std::to_string(destination->y) + ")");
+            double remaining = Vehicle::computeDistance(_location->x, _location->y, destination->x, destination->y);
+            if (remaining < speed/100.0 ) {
+                _location->x = destination->x;
+                _location->y = destination->y;
+                setState("Stopped");
+                en_route = false;
+                speed = 0.0;
+                destination = nullptr;
+            } else {
+                setState("Moving to (" + std::to_string(destination->x) + "," + std::to_string(destination->y) + ")");
+            }
         }
-        return;
     }
 
     // Mode 1: Move on a fixed course indefinitely
@@ -72,7 +74,55 @@ void Chopper::update() {
         _location->x += dx;
         _location->y += dy;
         setState("Moving on course " + std::to_string(angle));
-        return;
+    }
+
+    // Check if an attack is pending
+    if (pending_attack) {
+        // Find the target truck and police
+        const auto& vehicles = Model::getInstance().getVehicles();
+        std::shared_ptr<Vehicle> targetTruck = nullptr;
+
+        for (const auto& v : vehicles) {
+            if (v->getName() == pending_attack_target && dynamic_cast<Truck*>(v.get()) != nullptr) {
+                targetTruck = v;
+                break;
+            }
+        }
+
+        // Default result: fail
+        attack_success = false;
+
+        if (targetTruck) {
+            double truckDistance = Vehicle::computeDistance(_location->x, _location->y,
+                                                            targetTruck->get_location()->x, targetTruck->get_location()->y);
+
+            if (truckDistance < attack_range) {
+                // Check for police
+                bool policeNearby = false;
+                for (const auto& v : vehicles) {
+                    if (dynamic_cast<State_trooper*>(v.get()) != nullptr) {
+                        double dist = Vehicle::computeDistance(targetTruck->get_location()->x,
+                                                               targetTruck->get_location()->y,
+                                                               v->get_location()->x,
+                                                               v->get_location()->y);
+                        if (dist <= 0.1) {
+                            policeNearby = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!policeNearby) {
+                    attack_success = true;
+                    targetTruckName = targetTruck->getName();
+                }
+            }
+        }
+
+        // Reset the pending flag
+        pending_attack = false;
+
+        mode = 2;
     }
 
     // Mode 2: Attack mode (try to attack a truck if target set)
@@ -125,51 +175,11 @@ void Chopper::broadcast_current_state() {
 }
 
 bool Chopper::attack(const std::string& truckName) {
-    mode=2; // Set mode to attack
-    const auto& vehicles = Model::getInstance().getVehicles();
-    std::shared_ptr<Vehicle> targetTruck = nullptr;
-
-    // Step 1: Find truck with the given name
-    for (const auto& v : vehicles) {
-        if (v->getName() == truckName && dynamic_cast<Truck*>(v.get()) != nullptr) {
-            targetTruck = v;
-            break;
-        }
-    }
-
-    if (!targetTruck) {
-        attack_success = false;
-        return false;
-    }
-
-    // Step 2: Check distance to truck
-    double truckDistance = Vehicle::computeDistance(_location->x,_location->y, targetTruck->get_location()->x, targetTruck->get_location()->y);
-    if (truckDistance >= attack_range) {
-        attack_success = false;
-        return false;
-    }
-
-    // Step 3: Check for any police within 10km
-    bool policeNearby = false;
-    for (const auto& v : vehicles) {
-        if (dynamic_cast<State_trooper*>(v.get()) != nullptr) {
-            double dist = Vehicle::computeDistance(targetTruck->get_location()->x,targetTruck->get_location()->y, v->get_location()->x, v->get_location()->y);
-            if (dist <= 0.1) {
-                policeNearby = true;
-                break;
-            }
-        }
-    }
-
-    // Final decision
-    if (!policeNearby) {
-        attack_success = true;
-        targetTruckName = targetTruck->getName();
-        return true;
-    } else {
-        // Failure due to nearby police
-        attack_success = false;
-        return false;
-    }
+    // Schedule attack for the next update step
+    pending_attack = true;
+    pending_attack_target = truckName;
+    mode = 2; // attack mode
+    setState("Attacking " + truckName);
+    return true; // you can ignore this, the actual result is checked in update
 }
 

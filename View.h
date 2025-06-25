@@ -5,13 +5,21 @@
 #ifndef VIEW_H
 #define VIEW_H
 
-
-
 #include <iostream>
 #include <iomanip>
 #include <vector>
 #include <memory>
 
+
+
+/**
+ * @class View
+ * @brief Responsible for displaying the simulation map, panning, zooming, and showing objects' locations.
+ *
+ * The View class manages a grid-based ASCII map of the simulation,
+ * supports zoom, pan, and object insertion, and provides
+ * methods to display the current state.
+ */
 class View {
 private:
     std::vector<std::vector<std::string>> map;      // Map representing the view
@@ -20,25 +28,82 @@ private:
     double x;                                       // X-coordinate
     double y;                                       // Y-coordinate
 
-    // Helper method to rotate the view matrix
+    /**
+     * @brief Helper function to rotate the map (for display purposes)
+     * @return Rotated matrix
+     */
     std::vector<std::vector<std::string>> rotate_matrix();
 
 public:
-    View();         // Default constructor
 
-    // Big three
-    View(const View &v);                // Copy constructor
-    ~View() = default;                  // Destructor
-    View &operator=(const View &v);     // Copy assignment operator
+    /**
+     * @brief Default constructor (sets default map size/scale/origin)
+     */
+    View();
 
-    void default_size();                // Set the view size to default
-    void new_size(int s);               // Set a new view size
-    void new_zoom(double z);            // Set a new zoom scale factor
-    void pan(double xx, double yy);     // Pan the view by adjusting the coordinates
-    void show();                        // Display the view
 
-    void insert_obj(double i, double j, std::string name);      // Insert an object into the view
-    void clear();                       // Clear the view
+
+    /**
+     * @brief Copy constructor
+     */
+    View(const View &v);
+
+    /**
+     * @brief Destructor (default)
+     */
+    ~View() = default;
+
+    /**
+    * @brief Assignment operator (copy)
+    */
+    View &operator=(const View &v);
+
+
+    /**
+     * @brief Reset the view size and scale to default values
+     */
+    void default_size();
+
+    /**
+    * @brief Change the view size (number of grid cells)
+    * @param s New size (width and height)
+    */
+    void new_size(int s);
+
+
+    /**
+    * @brief Change the zoom scale (km per cell)
+    * @param z New zoom factor
+    */
+    void new_zoom(double z);
+
+
+    /**
+     * @brief Move the view window by changing the lower-left origin coordinates
+     * @param xx New X origin
+     * @param yy New Y origin
+     */
+    void pan(double xx, double yy);
+
+
+    /**
+     * @brief Print the view (current map state) to the console
+     */
+    void show();
+
+
+    /**
+     * @brief Insert an object (by name) at location (i, j) into the view
+     * @param i X coordinate
+     * @param j Y coordinate
+     * @param name Short name/symbol to display on the map
+     */
+    void insert_obj(double i, double j, std::string name);
+
+    /**
+    * @brief Clear the map of all objects (reset grid)
+    */
+    void clear();
 
     // Getters
     int getSize() const;                // Get the view size

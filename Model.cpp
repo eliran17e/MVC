@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include "Chopper.h"
+
 void Model::addSimObj(const std::shared_ptr<Sim_obj>& obj) {
     sim_objects.push_back(obj);
 }
@@ -26,7 +28,14 @@ const std::vector<std::shared_ptr<Vehicle>>& Model::getVehicles() const {
 
 void Model::go() {
     for(auto const& obj : sim_objects) {
-        obj->update();
+        if (!dynamic_cast<Chopper*>(obj.get())) {
+            obj->update();
+        }
+    }
+    for(auto const& obj : vehicles) {
+        if (dynamic_cast<Chopper*>(obj.get())) {
+            obj->update();
+        }
     }
     time++;
 }
