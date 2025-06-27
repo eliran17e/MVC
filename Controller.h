@@ -4,7 +4,7 @@
 
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
-
+#include "MyExceptions.h"
 #include <iostream>
 /**
  * @class Controller

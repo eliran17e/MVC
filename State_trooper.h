@@ -22,7 +22,6 @@ private:
     set<std::string> visitedWarehouses;
     void startPatrol();                 ///< Initiate patrol to next unvisited warehouse
 
-    // Pending goto logic (used for asynchronous command execution)
     bool pending_goto = false;
     std::string pending_goto_name;
 

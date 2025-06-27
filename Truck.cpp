@@ -23,7 +23,7 @@ void Truck::update() {
         setState("Moving to manual destination");
 
         pending_position = false;
-        // Do NOT return here: continue to rest of logic!
+
     }
 
     if (pending_course) {
@@ -37,7 +37,7 @@ void Truck::update() {
         setState("Moving on course");
 
         pending_course = false;
-        // Do NOT return here: continue to rest of logic!
+
     }
 
     double currentTime = Model::getInstance().getTime();
@@ -67,7 +67,7 @@ void Truck::update() {
             en_route = false;
             arrived = true;
         }
-        return; // Don't continue to delivery logic
+        return;
     }
 
 
@@ -80,7 +80,7 @@ void Truck::update() {
         _location->y += dy;
 
         setState("Moving on course");
-        return; // Don't continue to delivery logic
+        return;
     }
 
     // MODE 2: Normal delivery route

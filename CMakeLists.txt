@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.31)
-project(MVC)
+project(simDepot)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(MVC main.cpp
+add_executable(simDepot main.cpp
         Truck.cpp
         Truck.h
         State_trooper.cpp
@@ -23,4 +23,5 @@ add_executable(MVC main.cpp
         View.cpp
         View.h
         Warehouse.cpp
-        Warehouse.h)
+        Warehouse.h
+        MyExceptions.h)

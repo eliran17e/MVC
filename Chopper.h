@@ -54,7 +54,7 @@ public:
     /**
      * @brief Attempts to attack a truck by name.
      * @param truckName Name of the truck to attack.
-     * @return true if attack succeeds, false otherwise.
+     *
      *
      * Attack will only succeed if:
      *  - The truck exists and is within attack_range.
@@ -64,7 +64,7 @@ public:
      * On both success and failure, sets the state to "Stopped".
      */
 
-    bool attack(const std::string& truckName);
+    void attack(const std::string& truckName);
     };
 
 

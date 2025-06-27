@@ -11,38 +11,46 @@ Controller::Controller() {
     Model::getInstance();
 }
 void Controller::run(int argc, char* argv[]) {
-    std::string warehouseFile;
-    std::vector<std::string> truckFiles;
+    try {
+        std::string warehouseFile;
+        std::vector<std::string> truckFiles;
 
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "-w" && i + 1 < argc) {
-            warehouseFile = argv[++i];
-        } else if (arg == "-t") {
-            while (++i < argc) {
-                truckFiles.push_back(argv[i]);
+        for (int i = 1; i < argc; ++i) {
+            std::string arg = argv[i];
+            if (arg == "-w" && i + 1 < argc) {
+                warehouseFile = argv[++i];
+            } else if (arg == "-t") {
+                while (++i < argc) {
+                    truckFiles.emplace_back(argv[i]);
+                }
             }
         }
-    }
 
-    if (warehouseFile.empty()) {
-        std::cerr << "ERROR: Warehouse file not specified with -w\n";
-        return;
-    }
+        if (warehouseFile.empty()) {
+            throw MyException("No warehouse file specified. Use -w <filename>");
+        }
 
-    loadWarehouses(warehouseFile);
-    for (const auto& truckFile : truckFiles) {
-        loadTruckSchedule(truckFile);
-    }
+        loadWarehouses(warehouseFile);
+        for (const auto& truckFile : truckFiles) {
+            loadTruckSchedule(truckFile);
+        }
 
-    commandLoop();
+        commandLoop();
+
+    } catch (const MyException& e) {
+        std::cerr << "Fatal Error: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Fatal std::exception: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Fatal unknown exception." << std::endl;
+    }
 }
+
 
 void Controller::loadWarehouses(const std::string& filename) {
     std::ifstream file(filename);
     if (!file) {
-        std::cerr << "ERROR: Cannot open warehouse file: " << filename << "\n";
-        return;
+        throw MyException("ERROR: Cannot open warehouse file: " + filename);
     }
 
     std::string line;
@@ -80,8 +88,7 @@ void Controller::loadWarehouses(const std::string& filename) {
 void Controller::loadTruckSchedule(const std::string& filename) {
     std::ifstream file(filename);
     if (!file) {
-        std::cerr << "ERROR: Cannot open truck file: " << filename << "\n";
-        return;
+            throw MyException("ERROR: Cannot open truck file: " + filename);
     }
 
     std::string truckName = filename.substr(filename.find_last_of("/\\") + 1);
@@ -91,8 +98,7 @@ void Controller::loadTruckSchedule(const std::string& filename) {
 
     std::string line;
     if (!std::getline(file, line)) {
-        std::cerr << "ERROR: Truck file empty: " << filename << "\n";
-        return;
+        throw MyException("ERROR: Truck file empty: " + filename);
     }
 
     auto& model = Model::getInstance();
@@ -107,8 +113,7 @@ void Controller::loadTruckSchedule(const std::string& filename) {
         return wh->getName() == prevWarehouseName;
     });
     if (prevWarehouseIt == whs.end()) {
-        std::cerr << "ERROR: Warehouse " << prevWarehouseName << " not found for truck " << truckName << "\n";
-        return;
+        throw MyException("ERROR: Warehouse " + prevWarehouseName + " not found for truck " + truckName);
     }
     std::shared_ptr<Point> prevLocation = (*prevWarehouseIt)->get_location();
     double prevDepartureTime = model.parseTime(prevDepartureTimeStr);
@@ -135,8 +140,7 @@ void Controller::loadTruckSchedule(const std::string& filename) {
             return wh->getName() == warehouseName;
         });
         if (warehouseIt == whs.end()) {
-            std::cerr << "ERROR: Warehouse " << warehouseName << " not found in schedule for truck " << truckName << "\n";
-            continue;
+            throw MyException("ERROR: Warehouse " + warehouseName + " not found for truck " + truckName);
         }
         std::shared_ptr<Point> warehouseLoc = (*warehouseIt)->get_location();
         double arrivalTime = model.parseTime(arrivalStr);
@@ -174,144 +178,150 @@ void Controller::loadTruckSchedule(const std::string& filename) {
 
 void Controller::commandLoop() {
     std::string line;
-    std::cout << "Time " + std::to_string(static_cast<int>(Model::getInstance().getTime())) + ": Enter command: ";
 
-    while (std::getline(std::cin, line)) {
-        std::istringstream iss(line);
-        std::string command;
-        iss >> command;
+    while (true) {
+        std::cout << "Time " << static_cast<int>(Model::getInstance().getTime()) << ": Enter command: ";
+        if (!std::getline(std::cin, line)) break;
 
-        if (command == "exit") break;
+        try {
+            std::istringstream iss(line);
+            std::string command;
+            iss >> command;
 
-        if (command == "status") {
-            Model::getInstance().status();
-        } else if (command == "go") {
-            Model::getInstance().go();
-        } else if (command == "default") {
-            Model::getInstance().getView()->default_size();
-        } else if (command == "size") {
-            int s;
-            if (iss >> s && s >= 6 && s <= 30) {
-                Model::getInstance().getView()->new_size(s);
-            } else {
-                std::cerr << "ERROR: Invalid size. Must be between 6 and 30.\n";
-            }
-        } else if (command == "zoom") {
-            double z;
-            if (iss >> z && z > 0) {
-                Model::getInstance().getView()->new_zoom(z);
-            } else {
-                std::cerr << "ERROR: Invalid zoom. Must be a positive number.\n";
-            }
-        } else if (command == "pan") {
-            double x, y;
-            if (iss >> x >> y) {
-                Model::getInstance().getView()->pan(x, y);
-            } else {
-                std::cerr << "ERROR: Invalid pan coordinates.\n";
-            }
-        } else if (command == "show") {
-            Model::getInstance().getView()->clear();
-            Model::getInstance().insert_objects();
-            Model::getInstance().getView()->show();
-        } else if (command == "create") {
-            std::string objName, type;
-            iss >> objName >> type;
-            if (type == "State_trooper") {
-                std::string warehouseName;
-                iss >> warehouseName;
-                auto wh = Model::getInstance().findWarehouseByName(warehouseName);
-                if (!wh) {
-                    std::cerr << "ERROR: Warehouse '" << warehouseName << "' not found.\n";
+            if (command == "exit") break;
+
+            if (command == "status") {
+                Model::getInstance().status();
+            } else if (command == "go") {
+                Model::getInstance().go();
+            } else if (command == "default") {
+                Model::getInstance().getView()->default_size();
+            } else if (command == "size") {
+                int s;
+                if (iss >> s && s >= 6 && s <= 30) {
+                    Model::getInstance().getView()->new_size(s);
                 } else {
-                    auto trooper = std::make_shared<State_trooper>(objName, std::make_shared<Point>(wh->get_location()->x, wh->get_location()->y));
-                    Model::getInstance().addVehicle(trooper);
+                    throw MyException("Invalid command: size");
                 }
-            } else if (type == "Chopper") {
-                std::string coord;
-                std::getline(iss, coord); // grab the rest of the line (e.g. "(14.00, 14.00)")
-
+            } else if (command == "zoom") {
+                double z;
+                if (iss >> z && z > 0) {
+                    Model::getInstance().getView()->new_zoom(z);
+                } else {
+                    throw MyException("Invalid zoom. Must be positive.");
+                }
+            } else if (command == "pan") {
                 double x, y;
-                if (sscanf(coord.c_str(), " (%lf , %lf)", &x, &y) == 2) {
-                    auto chopper = std::make_shared<Chopper>(objName, std::make_shared<Point>(x, y));
-                    Model::getInstance().addVehicle(chopper);
+                if (iss >> x >> y) {
+                    Model::getInstance().getView()->pan(x, y);
                 } else {
-                    std::cerr << "ERROR: Invalid coordinates format for Chopper. Use (x, y)\n";
+                    throw MyException("Invalid command: pan");
                 }
-            } else {
-                std::cerr << "ERROR: Invalid type. Only 'State_trooper' and 'Chopper' are supported.\n";
-            }
-        } else {
-            std::string objName = command;
-            auto vehicle = Model::getInstance().findVehicleByName(objName);
-            if (!vehicle) {
-                std::cerr << "ERROR: Unknown object '" << objName << "'\n";
-                std::cout << "Time " + std::to_string(static_cast<int>(Model::getInstance().getTime())) + ": Enter command: ";
-                continue;
-            }
-
-            std::string action;
-            iss >> action;
-
-            if (action == "course") {
-                double angle;
-                iss >> angle;
-                if (std::dynamic_pointer_cast<Chopper>(vehicle)) {
-                    double speed;
-                    if (iss >> speed) {
-                        if (speed > 170.0) {
-                            std::cerr << "ERROR: Chopper speed cannot exceed 170 km/h.\n";
-                        } else {
-                            vehicle->course(angle, speed);
-                        }
-                    } else {
-                        std::cerr << "ERROR: Chopper requires speed in 'course' command.\n";
-                    }
-                } else {
-                    vehicle->course(angle,90); // Truck or Trooper
-                }
-            } else if (action == "position") {
-                double x, y;
-                iss >> x >> y;
-                if (std::dynamic_pointer_cast<Chopper>(vehicle)) {
-                    double speed;
-                    if (iss >> speed) {
-                        if (speed > 170.0) {
-                            std::cerr << "ERROR: Chopper speed cannot exceed 170 km/h.\n";
-                        } else {
-                            vehicle->position(x, y, speed);
-                        }
-                    } else {
-                        std::cerr << "ERROR: Chopper requires speed in 'position' command.\n";
-                    }
-                } else {
-                    vehicle->position(x, y,90);
-                }
-            } else if (action == "destination") {
-                auto trooper = std::dynamic_pointer_cast<State_trooper>(vehicle);
-                if (trooper) {
+            } else if (command == "show") {
+                Model::getInstance().getView()->clear();
+                Model::getInstance().insert_objects();
+                Model::getInstance().getView()->show();
+            } else if (command == "create") {
+                std::string objName, type;
+                iss >> objName >> type;
+                if (type == "State_trooper") {
                     std::string warehouseName;
                     iss >> warehouseName;
-                    trooper->goToDestination(warehouseName);
+                    auto wh = Model::getInstance().findWarehouseByName(warehouseName);
+                    if (!wh) {
+                        throw MyException("Warehouse '" + warehouseName + "' not found.");
+                    } else {
+                        auto trooper = std::make_shared<State_trooper>(objName, std::make_shared<Point>(wh->get_location()->x, wh->get_location()->y));
+                        Model::getInstance().addVehicle(trooper);
+                    }
+                } else if (type == "Chopper") {
+                    std::string coord;
+                    std::getline(iss, coord);
+                    double x, y;
+                    if (sscanf(coord.c_str(), " (%lf , %lf)", &x, &y) == 2) {
+                        auto chopper = std::make_shared<Chopper>(objName, std::make_shared<Point>(x, y));
+                        Model::getInstance().addVehicle(chopper);
+                    } else {
+                        throw MyException("Invalid coordinates format for Chopper. Use (x, y)");
+                    }
                 } else {
-                    std::cerr << "ERROR: Only State_trooper supports 'destination' command.\n";
+                    throw MyException("Invalid type. Only 'State_trooper' and 'Chopper' are supported.");
                 }
-            } else if (action == "attack") {
-                auto chopper = std::dynamic_pointer_cast<Chopper>(vehicle);
-                if (chopper) {
-                    std::string target;
-                    iss >> target;
-                    chopper->attack(target);
-                } else {
-                    std::cerr << "ERROR: Only Chopper supports 'attack' command.\n";
-                }
-            } else if (action == "stop") {
-                vehicle->setState("Stopped");
             } else {
-                std::cerr << "ERROR: Unknown command '" << action << "' for object '" << objName << "'\n";
+                // Vehicle command
+                std::string objName = command;
+                auto vehicle = Model::getInstance().findVehicleByName(objName);
+                if (!vehicle) {
+                    throw MyException("Vehicle '" + objName + "' not found.");
+                }
+                std::string action;
+                iss >> action;
+
+                if (action == "course") {
+                    double angle;
+                    iss >> angle;
+                    if (std::dynamic_pointer_cast<Chopper>(vehicle)) {
+                        double speed;
+                        if (iss >> speed) {
+                            if (speed > 170.0) {
+                                throw MyException("Chopper speed cannot exceed 170 km/h.");
+                            } else {
+                                vehicle->course(angle, speed);
+                            }
+                        } else {
+                            throw MyException("Chopper requires speed in 'course' command.");
+                        }
+                    } else {
+                        vehicle->course(angle, 90);
+                    }
+                } else if (action == "position") {
+                    double x, y;
+                    iss >> x >> y;
+                    if (std::dynamic_pointer_cast<Chopper>(vehicle)) {
+                        double speed;
+                        if (iss >> speed) {
+                            if (speed > 170.0) {
+                                throw MyException("Chopper speed cannot exceed 170 km/h.");
+                            } else {
+                                vehicle->position(x, y, speed);
+                            }
+                        } else {
+                            throw MyException("Chopper requires speed in 'position' command.");
+                        }
+                    } else {
+                        vehicle->position(x, y, 90);
+                    }
+                } else if (action == "destination") {
+                    auto trooper = std::dynamic_pointer_cast<State_trooper>(vehicle);
+                    if (trooper) {
+                        std::string warehouseName;
+                        iss >> warehouseName;
+                        trooper->goToDestination(warehouseName);
+                    } else {
+                        throw MyException("Only State_trooper supports 'destination' command.");
+                    }
+                } else if (action == "attack") {
+                    auto chopper = std::dynamic_pointer_cast<Chopper>(vehicle);
+                    if (chopper) {
+                        std::string target;
+                        iss >> target;
+                        chopper->attack(target);
+                    } else {
+                        throw MyException("Only Chopper supports 'attack' command.");
+                    }
+                } else if (action == "stop") {
+                    vehicle->setState("Stopped");
+                } else {
+                    throw MyException("Invalid action '" + action + "' for vehicle '" + objName + "'.");
+                }
             }
+        } catch (const MyException& e) {
+            std::cout  << "Error: " << e.what() << std::endl;
+        } catch (const std::exception& e) {
+            std::cout  << "Exception: " << e.what() << std::endl;
+        } catch (...) {
+            std::cout  << "Unknown error occurred." << std::endl;
         }
 
-        std::cout << "Time " + std::to_string(static_cast<int>(Model::getInstance().getTime())) + ": Enter command: ";
     }
 }

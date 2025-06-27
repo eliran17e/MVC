@@ -174,12 +174,12 @@ void Chopper::broadcast_current_state() {
 
 }
 
-bool Chopper::attack(const std::string& truckName) {
+void Chopper::attack(const std::string& truckName) {
     // Schedule attack for the next update step
     pending_attack = true;
     pending_attack_target = truckName;
     mode = 2; // attack mode
     setState("Attacking " + truckName);
-    return true; // you can ignore this, the actual result is checked in update
+
 }
 
