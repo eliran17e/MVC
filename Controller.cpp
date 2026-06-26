@@ -166,13 +166,6 @@ void Controller::loadTruckSchedule(const std::string& filename) {
 
     truck->setBoxes(totalCrates);
     model.addVehicle(truck);
-
-
-
-    std::queue<DeliveryLeg> tmp = truck->getDeliveryQueue();
-    while (!tmp.empty()) {
-        tmp.pop();
-    }
 }
 
 

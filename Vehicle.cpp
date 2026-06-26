@@ -1,5 +1,7 @@
 #include "Vehicle.h"
 
+#include <iostream>
+
 void Vehicle::set_location(const shared_ptr<Point> &location) {
     _location = std::make_shared<Point>(*location);
 }

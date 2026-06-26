@@ -89,12 +89,15 @@ public:
 
 
     /**
-     * @brief Insert an object (by name) at location (i, j) into the view
-     * @param i X coordinate
-     * @param j Y coordinate
+     * @brief Insert an object's symbol at a world location into the view.
+     * @param worldX World x-coordinate of the object
+     * @param worldY World y-coordinate of the object
      * @param name Short name/symbol to display on the map
+     *
+     * The location is mapped to a grid cell using the current origin and
+     * scale; objects outside the visible window are ignored.
      */
-    void insert_obj(double i, double j, std::string name);
+    void insert_obj(double worldX, double worldY, std::string name);
 
     /**
     * @brief Clear the map of all objects (reset grid)

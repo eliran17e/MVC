@@ -1,26 +1,6 @@
 #include "State_trooper.h"
 
-
-// void State_trooper::course(double angle,double speed = 90.0) {
-//     this->angle = angle;
-//     this->speed = speed;
-//     this->destination = nullptr;
-//     en_route = true;
-//     arrived = false;
-//     mode = 1; // <-- course mode
-//     setState("Moving to " + std::to_string(angle));
-// }
-//
-// void State_trooper::position(double x, double y,double speed=90.0) {
-//     destination = std::make_shared<Point>(x, y);
-//     angle = to_degrees(std::atan2(x - _location->x, y - _location->y));
-//     this->speed = speed;
-//     en_route = true;
-//     arrived = false;
-//     mode = 0; // <-- position mode
-//     setState("Moving to position");
-// }
-
+#include <iostream>
 
 void State_trooper::goToDestination(const std::string& warehouseName) {
     pending_goto = true;

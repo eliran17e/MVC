@@ -98,7 +98,7 @@ public:
      * @brief Set the vehicle's state string.
      * @param state1 New state
      */
-    void setState(const string &state1) {
+    void setState(const std::string &state1) {
         state = state1;
     }
 

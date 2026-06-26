@@ -1,6 +1,7 @@
 #include "Geometry.h"
 #include <cmath>
-#include <ctgmath>
+#include <iostream>
+#include <iomanip>
 const double pi = 2. * atan2(1., 0.);
 double to_radians(double theta_d)
 {
@@ -60,7 +61,7 @@ Point::Point()
 
 void Point::print() const
 {
-    cout << setprecision(2) << "(" << x << ", " << y << ")";
+    std::cout << std::setprecision(2) << "(" << x << ", " << y << ")";
 }
 
 bool Point::operator==(const Point & rhs)

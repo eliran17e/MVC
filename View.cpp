@@ -105,14 +105,15 @@ void View::show() {
     std::cout << std::endl << std::endl;
 }
 
-void View::insert_obj(double i, double j, std::string name) {
-    // Convert world coordinates to view grid indices
-    int row = static_cast<int>((j - y) / scale);
-    int col = static_cast<int>((i - x) / scale);
+void View::insert_obj(double worldX, double worldY, std::string name) {
+    // Convert world coordinates to view grid indices, relative to the
+    // current origin (x, y) and scale. map is indexed [xIndex][yIndex];
+    // rotate_matrix() turns that into a north-up display in show().
+    int xIndex = static_cast<int>((worldX - x) / scale);
+    int yIndex = static_cast<int>((worldY - y) / scale);
 
-    // Check bounds before inserting into the map
-    if (row >= 0 && row < size && col >= 0 && col < size) {
-        map[row][col] = std::move(name);
+    if (xIndex >= 0 && xIndex < size && yIndex >= 0 && yIndex < size) {
+        map[xIndex][yIndex] = std::move(name);
     }
 }
 void View::clear() {

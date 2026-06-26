@@ -19,7 +19,7 @@ class State_trooper : public Vehicle {
 private:
     bool arrived = false;
     std::string currentDestinationName;
-    set<std::string> visitedWarehouses;
+    std::set<std::string> visitedWarehouses;
     void startPatrol();                 ///< Initiate patrol to next unvisited warehouse
 
     bool pending_goto = false;

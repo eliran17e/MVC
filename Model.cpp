@@ -58,33 +58,16 @@ double Model::getTime() const {
 
 
 void Model::insert_objects() {
-
-
+    // insert_obj() maps world coordinates to grid cells and clips anything
+    // outside the visible window, so no bounds checking is needed here.
     for (auto const& obj : vehicles) {
         auto loc = obj->get_location();
-        double scale = view->getScale();
-        int size = view->getSize();
-
-        int col = static_cast<int>(loc->x);
-        int row = static_cast<int>(loc->y);
-
-        if (col < 0 || col/scale >= size || row < 0 || row/scale >= size)
-            continue;  // Out of view bounds
-
-        view->insert_obj(row, col, obj->getName().substr(0, 2));
+        view->insert_obj(loc->x, loc->y, obj->getName().substr(0, 2));
     }
 
     for (auto const& obj : warehouses) {
         auto loc = obj->get_location();
-        double scale = view->getScale();
-        int size = view->getSize();
-        int col = static_cast<int>(loc->x);
-        int row = static_cast<int>(loc->y);
-
-        if (col < 0 || col/scale >= size || row < 0 || row/scale >= size)
-            continue;
-
-        view->insert_obj(row, col, obj->getName().substr(0, 2));
+        view->insert_obj(loc->x, loc->y, obj->getName().substr(0, 2));
     }
 }
 
@@ -116,7 +99,7 @@ double Model::parseTime(const std::string& timeStr) {
     return hours + minutes / 60.0;
 }
 
-std::shared_ptr<Vehicle> Model::findVehicleByName(const string &name) {
+std::shared_ptr<Vehicle> Model::findVehicleByName(const std::string &name) {
 
     for (const auto& obj : vehicles) {
         if (obj->getName() == name) {
@@ -127,7 +110,7 @@ std::shared_ptr<Vehicle> Model::findVehicleByName(const string &name) {
 
 }
 
-std::shared_ptr<Warehouse> Model::findWarehouseByName(const string &name) {
+std::shared_ptr<Warehouse> Model::findWarehouseByName(const std::string &name) {
 
     for (const auto& obj : warehouses) {
         if (obj->getName() == name) {

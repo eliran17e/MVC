@@ -69,7 +69,7 @@ public:
      * @param name Name of the simulation object.
      * @return Shared pointer to the object, or nullptr if not found.
      */
-    std::shared_ptr<Sim_obj> findSimObjByName(const string &name);
+    std::shared_ptr<Sim_obj> findSimObjByName(const std::string &name);
 
 
     /**
@@ -85,7 +85,7 @@ public:
      * @param name Name of the vehicle.
      * @return Shared pointer to the vehicle, or nullptr if not found.
      */
-    std::shared_ptr<Vehicle> findVehicleByName(const string & name);
+    std::shared_ptr<Vehicle> findVehicleByName(const std::string & name);
 
 
 
@@ -95,7 +95,7 @@ public:
      * @param name Name of the warehouse.
      * @return Shared pointer to the warehouse, or nullptr if not found.
      */
-    std::shared_ptr<Warehouse> findWarehouseByName(const string & string);
+    std::shared_ptr<Warehouse> findWarehouseByName(const std::string & name);
 
 
 

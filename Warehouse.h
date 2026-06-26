@@ -21,7 +21,7 @@ public:
     * @param location Shared pointer to the warehouse's location
     * @param inventory Initial inventory count
     */
-    Warehouse(const string &n,std::shared_ptr<Point> location,int inventory) ;
+    Warehouse(const std::string &n, std::shared_ptr<Point> location, int inventory);
     ~Warehouse() override = default;
 
     /**

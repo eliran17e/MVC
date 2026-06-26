@@ -1,9 +1,10 @@
-#include <iostream>
-#include <iomanip>
-using namespace std;
+#ifndef GEOMETRY_H
+#define GEOMETRY_H
+
 // angle units conversion functions
 double to_radians(double theta_d);
 double to_degrees(double theta_r);
+
 // class declarations
 typedef struct Point {
     double x;
@@ -20,7 +21,9 @@ typedef struct Point {
         return *this;
     }
 } Point;
+
 struct Polar_vector;
+
 typedef struct Cartesian_vector {
     Cartesian_vector(const struct Polar_vector & pv);
     Cartesian_vector();
@@ -28,6 +31,7 @@ typedef struct Cartesian_vector {
     double delta_x;
     double delta_y;
 } Cartesian_vector;
+
 typedef struct Polar_vector {
     Polar_vector(const Cartesian_vector & cv);
     Polar_vector();
@@ -36,3 +40,4 @@ typedef struct Polar_vector {
     double theta;
 } Polar_vector;
 
+#endif // GEOMETRY_H

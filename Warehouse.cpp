@@ -1,5 +1,8 @@
 #include "Warehouse.h"
-Warehouse::Warehouse(const string &n, std::shared_ptr<Point> location, int inventory)
+
+#include <iostream>
+
+Warehouse::Warehouse(const std::string &n, std::shared_ptr<Point> location, int inventory)
     : Sim_obj(n), _inventory(inventory), _quantity(0), _location(std::make_shared<Point>(*location)) {
 }
 const shared_ptr<Point> &Warehouse::get_location() const {
@@ -12,12 +15,12 @@ void Warehouse::update() {
 
 void Warehouse::broadcast_current_state() {
     // Broadcast the current state of the warehouse
-    cout << "Warehouse " << getName() << " at position (" << _location->x << ", " << _location->y << ") with inventory: " << _inventory << endl;
+    std::cout << "Warehouse " << getName() << " at position (" << _location->x << ", " << _location->y << ") with inventory: " << _inventory << std::endl;
 }
 
 bool Warehouse::update_boxes(int quantity) {
     if (_inventory + quantity < 0) {
-        cout << "Cannot remove more boxes than available in inventory." << endl;
+        std::cout << "Cannot remove more boxes than available in inventory." << std::endl;
         return false;
     } else {
         _quantity += quantity;
