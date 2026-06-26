@@ -1,0 +1,27 @@
+# Build output
+/build/
+/cmake-build-*/
+*.o
+*.obj
+*.exe
+*.out
+simDepot
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+
+# IDE / editor
+.idea/
+.vscode/
+*.user
+*.iml
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Archives / submission artifacts
+*.zip

@@ -1,0 +1,12 @@
+# Normalize line endings: treat these as text and check out with LF everywhere.
+* text=auto eol=lf
+
+# Explicitly mark source and docs as text.
+*.cpp  text eol=lf
+*.h    text eol=lf
+*.md   text eol=lf
+*.txt  text eol=lf
+*.dat  text eol=lf
+*.yml  text eol=lf
+CMakeLists.txt text eol=lf
+Makefile       text eol=lf
