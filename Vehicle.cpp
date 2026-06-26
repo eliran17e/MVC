@@ -1,7 +1,3 @@
-//
-// Created by User on 20/06/2025.
-//
-
 #include "Vehicle.h"
 
 void Vehicle::set_location(const shared_ptr<Point> &location) {

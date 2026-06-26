@@ -1,7 +1,3 @@
-//
-// Created by User on 20/06/2025.
-//
-
 #include "Warehouse.h"
 Warehouse::Warehouse(const string &n, std::shared_ptr<Point> location, int inventory)
     : Sim_obj(n), _inventory(inventory), _quantity(0), _location(std::make_shared<Point>(*location)) {

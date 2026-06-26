@@ -1,7 +1,3 @@
-//
-// Created by User on 20/06/2025.
-//
-
 #ifndef TRUCK_H
 #define TRUCK_H
 

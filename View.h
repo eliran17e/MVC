@@ -1,7 +1,3 @@
-//
-// Created by User on 20/06/2025.
-//
-
 #ifndef VIEW_H
 #define VIEW_H
 

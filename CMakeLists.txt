@@ -1,27 +1,35 @@
-cmake_minimum_required(VERSION 3.31)
-project(simDepot)
+cmake_minimum_required(VERSION 3.16)
+project(simDepot CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(simDepot main.cpp
+# All simulation logic lives in a static library so that both the
+# executable and the test runner can link against the same code.
+add_library(sim_core STATIC
         Truck.cpp
-        Truck.h
         State_trooper.cpp
-        State_trooper.h
         Chopper.cpp
-        Chopper.h
         Sim_obj.cpp
-        Sim_obj.h
         Geometry.cpp
-        Geometry.h
         Vehicle.cpp
-        Vehicle.h
         Controller.cpp
-        Controller.h
         Model.cpp
-        Model.h
         View.cpp
-        View.h
-        Warehouse.cpp
-        Warehouse.h
-        MyExceptions.h)
+        Warehouse.cpp)
+
+target_include_directories(sim_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+if (MSVC)
+    target_compile_options(sim_core PRIVATE /W4)
+else ()
+    target_compile_options(sim_core PRIVATE -Wall -Wextra)
+endif ()
+
+add_executable(simDepot main.cpp)
+target_link_libraries(simDepot PRIVATE sim_core)
+
+# Tests
+enable_testing()
+add_subdirectory(tests)

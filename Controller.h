@@ -1,7 +1,3 @@
-//
-// Created by User on 20/06/2025.
-//
-
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 #include "MyExceptions.h"

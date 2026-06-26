@@ -1,7 +1,3 @@
-//
-// Created by User on 27/06/2025.
-//
-
 #ifndef MYEXCEPTIONS_H
 #define MYEXCEPTIONS_H
 #include <exception>

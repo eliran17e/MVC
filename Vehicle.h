@@ -1,7 +1,3 @@
-//
-// Created by User on 20/06/2025.
-//
-
 #ifndef VEHICLE_H
 #define VEHICLE_H
 #include <string>

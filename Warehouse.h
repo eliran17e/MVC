@@ -1,7 +1,3 @@
-//
-// Created by User on 20/06/2025.
-//
-
 #ifndef WAREHOUSE_H
 #define WAREHOUSE_H
 #include "Sim_obj.h"
