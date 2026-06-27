@@ -26,10 +26,10 @@ public:
      * @brief Constructs a Chopper.
      * @param name           The chopper's name.
      * @param location       Starting location as a shared pointer to a Point.
-     * @param state          Initial state string (default: "stopped").
+     * @param state          Initial state string (default: "Stopped").
      * @param attack_range   Attack range in km (default: 2.0 km).
      */
-    Chopper(std::string name, std::shared_ptr<Point> location, std::string state = "stopped", double attack_range = 0.02)
+    Chopper(std::string name, std::shared_ptr<Point> location, std::string state = "Stopped", double attack_range = 0.02)
     : Vehicle(std::move(name), std::move(location), std::move(state)), attack_range(attack_range) {}
 
     ~Chopper() override = default;

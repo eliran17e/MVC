@@ -33,9 +33,9 @@ public:
      * @brief Constructs a State_trooper object.
      * @param name Vehicle's unique name
      * @param location Shared pointer to starting location
-     * @param state Optional initial state (default: "stopped")
+     * @param state Optional initial state (default: "Stopped")
      */
-    State_trooper(const std::string& name, std::shared_ptr<Point> location, const std::string& state = "stopped")
+    State_trooper(const std::string& name, std::shared_ptr<Point> location, const std::string& state = "Stopped")
         : Vehicle(name, std::move(location), state) {}
 
 

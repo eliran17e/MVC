@@ -53,11 +53,11 @@ public:
      * @brief Constructor for Truck.
      * @param name Truck name
      * @param location Initial location
-     * @param state Initial state (default: "stopped")
+     * @param state Initial state (default: "Stopped")
      * @param boxes Initial crate count (default: 0)
      * @param firstWareHouseName Name of first warehouse (optional)
      */
-    Truck(std::string name, std::shared_ptr<Point> location, std::string state = "stopped", int boxes = 0,std::string firstWareHouseName = "")
+    Truck(std::string name, std::shared_ptr<Point> location, std::string state = "Stopped", int boxes = 0,std::string firstWareHouseName = "")
 : Vehicle(std::move(name), location, std::move(state)),
       num_boxes(boxes),
       current_leg()

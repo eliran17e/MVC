@@ -59,9 +59,9 @@ public:
      * @brief Constructor
      * @param name Vehicle name
      * @param location Initial location (shared pointer)
-     * @param state Initial state (default: "stopped")
+     * @param state Initial state (default: "Stopped")
      */
-    Vehicle(std::string name, shared_ptr<Point> location, std::string state = "stopped")
+    Vehicle(std::string name, shared_ptr<Point> location, std::string state = "Stopped")
         : Sim_obj(std::move(name)), state(std::move(state)),
     _location(std::move(location)), angle(0.0), speed(0.0), destination(nullptr) {}
 

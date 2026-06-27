@@ -121,7 +121,7 @@ void Controller::loadTruckSchedule(const std::string& filename) {
     auto truck = std::make_shared<Truck>(
         truckName,
         std::make_shared<Point>(*prevLocation),
-        "stopped",
+        "Stopped",
         0,
         prevWarehouseName
     );
