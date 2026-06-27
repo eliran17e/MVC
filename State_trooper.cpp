@@ -12,24 +12,14 @@ void State_trooper::update() {
 
 
     if (pending_position) {
-        destination = std::make_shared<Point>(pending_pos_x, pending_pos_y);
-        double dx = pending_pos_x - _location->x;
-        double dy = pending_pos_y - _location->y;
-        this->angle = to_degrees(std::atan2(dx, dy));
-        this->speed = pending_pos_speed;
-        this->mode = 0;
-        this->en_route = true;
-        this->arrived = false;
+        beginPositionMode(pending_pos_speed);
+        arrived = false;
         setState("Moving to position");
         pending_position = false;
     }
     if (pending_course) {
-        this->angle = pending_course_angle;
-        this->speed = pending_course_speed;
-        this->destination = nullptr;
-        this->mode = 1;
-        this->en_route = true;
-        this->arrived = false;
+        beginCourseMode(pending_course_speed);
+        arrived = false;
         setState("Moving to " + std::to_string(angle));
         pending_course = false;
     }
@@ -60,11 +50,7 @@ void State_trooper::update() {
         this->stop();
         return;
     }
-    double radians = to_radians(angle);
-    double dy = (speed / 100.0) * std::cos(radians);
-    double dx = (speed / 100.0) * std::sin(radians);
-    _location->x += dx;
-    _location->y += dy;
+    stepAlongHeading(speed / 100.0);
 
     if (mode == 0 && destination) {
         // Move to position, then stop

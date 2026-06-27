@@ -21,12 +21,35 @@ protected:
     double angle;                       // in degrees (0-360)
     double speed;                       // in km/h
     shared_ptr<Point> destination;      // optional, only when moving to a location
-    int mode; // 0 for position, 1 for in course , 2 destination/warehouse mode for trucks and state troopers
+    int mode = 0; // 0 for position, 1 for in course , 2 destination/warehouse mode for trucks and state troopers
     bool en_route = false;
     bool pending_position = false;
     bool pending_course = false;
     double pending_pos_x = 0, pending_pos_y = 0, pending_pos_speed = 0;
     double pending_course_angle = 0, pending_course_speed = 0;
+
+    /**
+     * @brief Configure position mode toward the pending (x, y) target.
+     * @param worldSpeed Speed in world units per tick (already scaled).
+     *
+     * Sets the destination, heading (compass convention, 0 deg = North),
+     * speed and mode. Callers set their own state string afterwards.
+     */
+    void beginPositionMode(double worldSpeed);
+
+    /**
+     * @brief Configure course mode using the pending angle.
+     * @param worldSpeed Speed in world units per tick (already scaled).
+     */
+    void beginCourseMode(double worldSpeed);
+
+    /**
+     * @brief Advance the location one step along the current heading.
+     * @param stepDistance Distance to move this tick (world units).
+     *
+     * Uses the compass convention (0 deg = North/+y, 90 deg = East/+x).
+     */
+    void stepAlongHeading(double stepDistance);
 
 public:
     Vehicle();

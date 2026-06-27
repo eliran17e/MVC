@@ -42,3 +42,26 @@ void Vehicle::course(double angle, double speed) {
     pending_course_angle = angle;
     pending_course_speed = speed;
 }
+
+void Vehicle::beginPositionMode(double worldSpeed) {
+    destination = std::make_shared<Point>(pending_pos_x, pending_pos_y);
+    angle = to_degrees(std::atan2(pending_pos_x - _location->x,
+                                  pending_pos_y - _location->y));
+    speed = worldSpeed;
+    mode = 0;
+    en_route = true;
+}
+
+void Vehicle::beginCourseMode(double worldSpeed) {
+    angle = pending_course_angle;
+    speed = worldSpeed;
+    destination = nullptr;
+    mode = 1;
+    en_route = true;
+}
+
+void Vehicle::stepAlongHeading(double stepDistance) {
+    double radians = to_radians(angle);
+    _location->x += stepDistance * std::sin(radians);
+    _location->y += stepDistance * std::cos(radians);
+}

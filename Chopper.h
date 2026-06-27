@@ -43,6 +43,11 @@ public:
      *  - Attack mode: Attempt to attack a truck within range.
      */
     void update() override;
+
+    /**
+     * @brief Choppers update after other objects so attacks see final positions.
+     */
+    bool defersUpdate() const override { return true; }
     /**
     * @brief Prints the current state and location of the chopper to stdout.
     */

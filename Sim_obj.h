@@ -48,6 +48,16 @@ public:
 
 
     /**
+     * @brief Whether this object should be updated in a later pass of the tick.
+     *
+     * Most objects update in the first pass. Objects that react to the
+     * post-move positions of others (e.g. a Chopper resolving an attack)
+     * override this to return true so they update after everyone else.
+     */
+    virtual bool defersUpdate() const { return false; }
+
+
+    /**
     * @brief Print or broadcast the current state of the object.
     */
     virtual void broadcast_current_state() = 0;

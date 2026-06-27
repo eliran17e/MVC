@@ -5,35 +5,24 @@
 
 void Truck::update() {
     if (pending_position) {
-        // Clear any routes, set mode, state, etc.
+        // Manual position overrides any scheduled route.
         while (!deliveryRoute.empty()) deliveryRoute.pop();
 
-        this->destination = std::make_shared<Point>(pending_pos_x, pending_pos_y);
-        double dx = pending_pos_x - _location->x;
-        double dy = pending_pos_y - _location->y;
-        this->angle = to_degrees(std::atan2(dx, dy));
-        this->speed = pending_pos_speed / 100.0;
-        this->mode = 0;
-        this->en_route = true;
-        this->arrived = false;
+        beginPositionMode(pending_pos_speed / 100.0);
+        arrived = false;
         setState("Moving to manual destination");
 
         pending_position = false;
-
     }
 
     if (pending_course) {
         while (!deliveryRoute.empty()) deliveryRoute.pop();
-        this->angle = pending_course_angle;
-        this->speed = pending_course_speed / 100.0;
-        this->destination = nullptr;
-        this->mode = 1;
-        this->en_route = true;
-        this->arrived = false;
+
+        beginCourseMode(pending_course_speed / 100.0);
+        arrived = false;
         setState("Moving on course");
 
         pending_course = false;
-
     }
 
     double currentTime = Model::getInstance().getTime();
@@ -47,12 +36,7 @@ void Truck::update() {
 
     // MODE 0: Move to position, stop at destination
     if (mode == 0 && en_route && destination) {
-        double radians = to_radians(angle);
-        double dy = (speed ) * std::cos(radians);
-        double dx = (speed ) * std::sin(radians);
-
-        _location->x += dx;
-        _location->y += dy;
+        stepAlongHeading(speed);
 
         double remaining = Vehicle::computeDistance(_location->x, _location->y, destination->x, destination->y);
         if (remaining < speed && !arrived) {
@@ -68,13 +52,7 @@ void Truck::update() {
 
 
     if (mode == 1 && en_route) {
-        double radians = to_radians(angle);
-        double dy = (speed ) * std::cos(radians);
-        double dx = (speed ) * std::sin(radians);
-
-        _location->x += dx;
-        _location->y += dy;
-
+        stepAlongHeading(speed);
         setState("Moving on course");
         return;
     }
@@ -116,6 +94,9 @@ void Truck::update() {
     }
 
     if (en_route && destination && !arrived && mode == 2) {
+        // Scheduled legs use a mathematical-angle heading (angle measured
+        // from +x via atan2(dy, dx) above), so this step is intentionally
+        // not the compass-based stepAlongHeading() used by manual moves.
         double radians = to_radians(angle);
         double dx = speed * std::cos(radians);
         double dy = speed * std::sin(radians);
